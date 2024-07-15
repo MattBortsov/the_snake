@@ -52,7 +52,7 @@ clock = pg.time.Clock()
 class GameObject():
     """Родительский класс для Яблока и Змейки."""
 
-    def __init__(self, color, border_color):
+    def __init__(self, color=None, border_color=BORDER_COLOR):
         self.position = SCREEN_CENTER
         self.body_color = color
         self.border_color = border_color
@@ -73,7 +73,7 @@ class Apple(GameObject):
     """Дочерний класс игрового объекта - Яблоко."""
 
     def __init__(self):
-        super().__init__(APPLE_COLOR, BORDER_COLOR)
+        super().__init__(APPLE_COLOR)
         self.randomize_position(set())
 
     def randomize_position(self, occupied_positions):
@@ -85,7 +85,7 @@ class Melon(GameObject):
     """Дочерний класс объекта - Дыня (съедобный, увеличивает змейку на 2)."""
 
     def __init__(self):
-        super().__init__(MELON_COLOR, BORDER_COLOR)
+        super().__init__(MELON_COLOR)
         self.randomize_position(set())
 
     def randomize_position(self, occupied_positions):
@@ -97,7 +97,7 @@ class Snake(GameObject):
     """Дочерний класс игрового объекта - Змейка."""
 
     def __init__(self):
-        super().__init__(SNAKE_COLOR, BORDER_COLOR)
+        super().__init__(SNAKE_COLOR)
         self.length = 1
         self.positions = [self.position]
         self.direction = RIGHT
