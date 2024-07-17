@@ -67,10 +67,9 @@ class GameObject():
 class RandomPozitionMixin():
     """Миксин для игровых объектов."""
 
-    def randomize_position(self, occupied_positions=SCREEN_CENTER):
+    def randomize_position(self, occupied_positions=list(SCREEN_CENTER)):
         """Выбирает рандомную позицию для съедобных объектов"""
-        if not isinstance(occupied_positions, set):
-            occupied_positions = set(occupied_positions)
+        occupied_positions = set(occupied_positions)
         self.position = choice(tuple(ALL_CELLS - occupied_positions))
 
 
@@ -114,6 +113,9 @@ class Snake(GameObject):
             (head_position[1] + self.direction[1] * GRID_SIZE) % SCREEN_HEIGHT
         )
         self.positions.insert(0, new_head_position)
+
+        if len(self.positions) > self.length:
+            self.positions.pop()
 
     def draw(self):
         """Отрисовывам Змейку."""
@@ -179,15 +181,10 @@ def main():
 
         if snake.get_head_position() == apple.position:
             snake.length += 1
-            apple.randomize_position(set(
-                snake.positions).union({melon.position}))
+            apple.randomize_position([melon.position, *snake.positions])
         elif snake.get_head_position() == melon.position:
             snake.length += 2
-            melon.randomize_position(set(
-                snake.positions).union({apple.position}))
-
-        if len(snake.positions) > snake.length:
-            snake.positions.pop()
+            melon.randomize_position([apple.position, *snake.positions])
 
         if snake.get_head_position() in snake.positions[1:]:
             snake.reset()
