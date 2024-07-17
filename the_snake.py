@@ -63,46 +63,42 @@ class GameObject():
         pg.draw.rect(screen, self.body_color, rect)
         pg.draw.rect(screen, self.border_color, rect, 1)
 
-    def randomize_position(self, occupied_positions):
-        """Определяем рандомную позицию объекта, избегая занятых позиций."""
+
+class RandomPozitionMixin():
+    """Миксин для игровых объектов."""
+
+    def randomize_position(self, occupied_positions=SCREEN_CENTER):
+        """Выбирает рандомную позицию для съедобных объектов"""
+        if not isinstance(occupied_positions, set):
+            occupied_positions = set(occupied_positions)
         self.position = choice(tuple(ALL_CELLS - occupied_positions))
-        occupied_positions.add(self.position)
 
 
-class Apple(GameObject):
+class Apple(GameObject, RandomPozitionMixin):
     """Дочерний класс игрового объекта - Яблоко."""
 
-    def __init__(self):
-        super().__init__(APPLE_COLOR)
-        self.randomize_position(set())
-
-    def randomize_position(self, occupied_positions):
-        """Определяем рандомную позицию для Яблока, избегая занятых позиций."""
-        super().randomize_position(occupied_positions)
+    def __init__(self, color=APPLE_COLOR, border_color=BORDER_COLOR):
+        super().__init__(color, border_color)
+        self.randomize_position()
 
 
-class Melon(GameObject):
-    """Дочерний класс объекта - Дыня (съедобный, увеличивает змейку на 2)."""
+class Melon(GameObject, RandomPozitionMixin):
+    """Дочерний класс игрового объекта - Дыня."""
 
-    def __init__(self):
-        super().__init__(MELON_COLOR)
-        self.randomize_position(set())
-
-    def randomize_position(self, occupied_positions):
-        """Определяем рандомную позицию для Дыни, избегая занятых позиций."""
-        super().randomize_position(occupied_positions)
+    def __init__(self, color=MELON_COLOR, border_color=BORDER_COLOR):
+        super().__init__(color, border_color)
+        self.randomize_position()
 
 
 class Snake(GameObject):
     """Дочерний класс игрового объекта - Змейка."""
 
-    def __init__(self):
-        super().__init__(SNAKE_COLOR)
+    def __init__(self, color=SNAKE_COLOR, border_color=BORDER_COLOR):
+        super().__init__(color, border_color)
         self.length = 1
         self.positions = [self.position]
         self.direction = RIGHT
         self.next_direction = None
-        self.last = None
 
     def update_direction(self):
         """Обновляет направление движения змейки."""
@@ -130,11 +126,6 @@ class Snake(GameObject):
         head_rect = pg.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, self.body_color, head_rect)
         pg.draw.rect(screen, self.border_color, head_rect, 1)
-
-        # Затирание последнего сегмента
-        if self.last:
-            last_rect = pg.Rect(self.last, (GRID_SIZE, GRID_SIZE))
-            pg.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
     def get_head_position(self):
         """Получаем позицию головы Змейки."""
@@ -186,24 +177,26 @@ def main():
         # Очистка экрана
         screen.fill(BOARD_BACKGROUND_COLOR)
 
+        if snake.get_head_position() == apple.position:
+            snake.length += 1
+            apple.randomize_position(set(
+                snake.positions).union({melon.position}))
+        elif snake.get_head_position() == melon.position:
+            snake.length += 2
+            melon.randomize_position(set(
+                snake.positions).union({apple.position}))
+
+        if len(snake.positions) > snake.length:
+            snake.positions.pop()
+
+        if snake.get_head_position() in snake.positions[1:]:
+            snake.reset()
+
         # Отрисовка объектов
         apple.draw()
         melon.draw()
         snake.draw()
         pg.display.update()
-
-        if snake.get_head_position() == apple.position:
-            snake.length += 1
-            apple.randomize_position(set(snake.positions))
-        elif snake.get_head_position() == melon.position:
-            snake.length += 2
-            melon.randomize_position(set(snake.positions))
-
-        if len(snake.positions) > snake.length:
-            snake.last = snake.positions.pop()
-
-        if snake.get_head_position() in snake.positions[1:]:
-            snake.reset()
 
 
 if __name__ == '__main__':
